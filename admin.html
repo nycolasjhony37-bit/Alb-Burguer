@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Alb'Burguer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        body { padding: 0; margin: 0; background-color: var(--bg-light); min-height: 200vh; }
+        header { position: sticky; top: 0; width: 100%; background: white !important; box-shadow: var(--shadow); z-index: 1000; padding: 1rem 0; }
+        .admin-login { max-width: 400px; margin: 10rem auto; padding: 2rem; background: white; border-radius: 20px; box-shadow: var(--shadow); }
+        .admin-dashboard { display: none; padding-bottom: 5rem; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 10px; }
+        .admin-table-container { width: 100%; overflow-x: auto; background: white; border-radius: 15px; box-shadow: var(--shadow); }
+        .admin-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .admin-table th, .admin-table td { padding: 1.2rem; text-align: left; border-bottom: 1px solid #eee; }
+        .admin-table th { background: var(--primary); color: white; position: sticky; top: 0; }
+        .actions { display: flex; gap: 0.5rem; }
+        .btn-sm { padding: 0.5rem 1rem; font-size: 0.7rem; }
+        .active-tab { background: var(--primary) !important; color: white !important; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 3rem; }
+        @media (max-width: 768px) {
+            .admin-header { flex-direction: column; gap: 1.5rem; text-align: center; }
+            .admin-tabs { flex-direction: column; width: 100%; }
+            .admin-tabs button { width: 100%; }
+            body { padding-top: 10px; }
+            .logo-img { height: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <header id="header" class="scrolled">
+        <nav class="container">
+            <div class="logo-container">
+                <img src="logo.png" alt="Alb'Burguer" class="logo-img">
+            </div>
+            <div class="nav-actions">
+                <a href="index.html" class="btn btn-outline">Ver Site</a>
+                <button id="logout-btn" class="btn btn-primary" style="display:none">Sair</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Login Section -->
+        <div id="login-section" class="admin-login">
+            <h2 style="margin-bottom: 2rem; text-align: center;">Login Administrativo</h2>
+            <div class="form-group">
+                <label>Usuário</label>
+                <input type="text" id="username" placeholder="admin">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="password" placeholder="admin">
+            </div>
+            <button id="login-btn" class="btn btn-primary btn-block">Entrar</button>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="admin-dashboard">
+            <div class="admin-tabs" style="margin-bottom: 3rem; display: flex; gap: 1rem;">
+                <button class="btn btn-outline active-tab" onclick="switchTab('stats')">Relatórios</button>
+                <button class="btn btn-outline" onclick="switchTab('menu')">Gerenciar Cardápio</button>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="tab-stats">
+                <div class="stats-grid">
+                    <div class="stats-card" style="background: #E3F2FD; padding: 2rem; border-radius: 20px;">
+                        <h4 style="color: #1976D2">Visualizações</h4>
+                        <p id="stat-views" style="font-size: 2.5rem; font-weight: 800; margin-top: 1rem;">0</p>
+                    </div>
+                    <div class="stats-card" style="background: #FFF3E0; padding: 2rem; border-radius: 20px;">
+                        <h4 style="color: #F57C00">Cliques no Menu</h4>
+                        <p id="stat-clicks" style="font-size: 2.5rem; font-weight: 800; margin-top: 1rem;">0</p>
+                    </div>
+                    <div class="stats-card" style="background: #F1F8E9; padding: 2rem; border-radius: 20px;">
+                        <h4 style="color: #388E3C">Taxa de Cliques (CTR)</h4>
+                        <p id="stat-ctr" style="font-size: 2.5rem; font-weight: 800; margin-top: 1rem;">0%</p>
+                    </div>
+                    <div class="stats-card" style="background: #FFEBEE; padding: 2rem; border-radius: 20px;">
+                        <h4 style="color: #D32F2F">Vendas (Checkout)</h4>
+                        <p id="stat-sales" style="font-size: 2.5rem; font-weight: 800; margin-top: 1rem;">0</p>
+                    </div>
+                </div>
+
+                <div class="checkout-box" style="margin-bottom: 3rem;">
+                    <h3>Funil de Vendas</h3>
+                    <div style="margin-top: 2rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>Conversão Final</span>
+                            <span id="stat-conversion">0%</span>
+                        </div>
+                        <div style="width: 100%; height: 20px; background: #eee; border-radius: 10px; overflow: hidden;">
+                            <div id="conversion-bar" style="width: 0%; height: 100%; background: var(--primary); transition: width 1s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Tab -->
+            <div id="tab-menu" style="display:none">
+                <div class="admin-header">
+                    <h2>Gerenciar Cardápio</h2>
+                    <button id="add-item-btn" class="btn btn-primary">+ Novo Item</button>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Preço</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-menu-list">
+                            <!-- Items injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="edit-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 2rem; border-radius: 20px; width: 500px; max-width: 90%;">
+                    <h3 id="modal-title">Editar Item</h3>
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="item-name">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="item-category">
+                            <option value="burgers">Burgers</option>
+                            <option value="combos">Combos</option>
+                            <option value="drinks">Bebidas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Preço</label>
+                        <input type="number" step="0.01" id="item-price">
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="item-desc"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>URL da Imagem</label>
+                        <input type="text" id="item-img">
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button id="save-item-btn" class="btn btn-primary btn-block">Salvar</button>
+                        <button id="cancel-item-btn" class="btn btn-outline btn-block">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            const loginSection = document.getElementById('login-section');
+            const dashboardSection = document.getElementById('dashboard-section');
+            const loginBtn = document.getElementById('login-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const menuList = document.getElementById('admin-menu-list');
+            const editModal = document.getElementById('edit-modal');
+
+            // Data
+            let menuData = JSON.parse(localStorage.getItem('alb_menu')) || [
+                { id: 1, name: "Alb' Classic", category: "burgers", price: 32.90, description: "Blend 180g, queijo cheddar derretido, alface, tomate e molho da casa.", img: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+                { id: 2, name: "Alb' Bacon Deluxe", category: "burgers", price: 38.90, description: "Blend 180g, muito bacon crocante, cebola caramelizada e maionese defumada.", img: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+                { id: 3, name: "Combo Família", category: "combos", price: 120.00, description: "4 Alb' Classics + 2 Porções de Batata + 1 Refrigerante 2L.", img: "https://images.unsplash.com/photo-1521305916504-4a1121188589?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" }
+            ];
+
+            // Login Logic
+            loginBtn.addEventListener('click', () => {
+                const user = document.getElementById('username').value;
+                const pass = document.getElementById('password').value;
+                if (user === 'admin' && pass === 'admin') {
+                    loginSection.style.display = 'none';
+                    dashboardSection.style.display = 'block';
+                    logoutBtn.style.display = 'block';
+                    renderAdminMenu();
+                    renderStats();
+                } else {
+                    alert('Dados incorretos!');
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                window.location.reload();
+            });
+
+            // Tabs Logic
+            window.switchTab = (tab) => {
+                document.getElementById('tab-stats').style.display = tab === 'stats' ? 'block' : 'none';
+                document.getElementById('tab-menu').style.display = tab === 'menu' ? 'block' : 'none';
+                
+                const buttons = document.querySelectorAll('.admin-tabs .btn');
+                buttons[0].classList.toggle('active-tab', tab === 'stats');
+                buttons[1].classList.toggle('active-tab', tab === 'menu');
+                
+                if (tab === 'stats') renderStats();
+                if (tab === 'menu') renderAdminMenu();
+            };
+
+            // Stats Logic
+            const renderStats = () => {
+                const stats = JSON.parse(localStorage.getItem('alb_stats')) || { views: 0, clicks: 0, checkouts: 0 };
+                const views = stats.views || 0;
+                const clicks = stats.clicks || 0;
+                const checkouts = stats.checkouts || 0;
+                
+                const ctr = views > 0 ? (clicks / views * 100).toFixed(1) : 0;
+                const conv = views > 0 ? (checkouts / views * 100).toFixed(1) : 0;
+
+                document.getElementById('stat-views').textContent = views;
+                document.getElementById('stat-clicks').textContent = clicks;
+                document.getElementById('stat-ctr').textContent = ctr + '%';
+                document.getElementById('stat-sales').textContent = checkouts;
+                document.getElementById('stat-conversion').textContent = conv + '%';
+                document.getElementById('conversion-bar').style.width = conv + '%';
+            };
+
+            // Admin Logic
+            const renderAdminMenu = () => {
+                menuList.innerHTML = menuData.map(item => `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.category}</td>
+                        <td>R$ ${item.price.toFixed(2)}</td>
+                        <td class="actions">
+                            <button class="btn btn-primary btn-sm" onclick="editItem(${item.id})">Editar</button>
+                            <button class="btn btn-outline btn-sm" onclick="deleteItem(${item.id})">Excluir</button>
+                        </td>
+                    </tr>
+                `).join('');
+            };
+
+            let currentEditId = null;
+
+            window.editItem = (id) => {
+                const item = menuData.find(m => m.id === id);
+                currentEditId = id;
+                document.getElementById('modal-title').textContent = 'Editar Item';
+                document.getElementById('item-name').value = item.name;
+                document.getElementById('item-category').value = item.category;
+                document.getElementById('item-price').value = item.price;
+                document.getElementById('item-desc').value = item.description;
+                document.getElementById('item-img').value = item.img;
+                editModal.style.display = 'flex';
+            };
+
+            window.deleteItem = (id) => {
+                if (confirm('Tem certeza?')) {
+                    menuData = menuData.filter(m => m.id !== id);
+                    saveData();
+                    renderAdminMenu();
+                }
+            };
+
+            document.getElementById('add-item-btn').addEventListener('click', () => {
+                currentEditId = null;
+                document.getElementById('modal-title').textContent = 'Novo Item';
+                document.getElementById('item-name').value = '';
+                document.getElementById('item-price').value = '';
+                document.getElementById('item-desc').value = '';
+                document.getElementById('item-img').value = '';
+                editModal.style.display = 'flex';
+            });
+
+            document.getElementById('save-item-btn').addEventListener('click', () => {
+                const newItem = {
+                    id: currentEditId || Date.now(),
+                    name: document.getElementById('item-name').value,
+                    category: document.getElementById('item-category').value,
+                    price: parseFloat(document.getElementById('item-price').value),
+                    description: document.getElementById('item-desc').value,
+                    img: document.getElementById('item-img').value || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                };
+
+                if (currentEditId) {
+                    const idx = menuData.findIndex(m => m.id === currentEditId);
+                    menuData[idx] = newItem;
+                } else {
+                    menuData.push(newItem);
+                }
+
+                saveData();
+                renderAdminMenu();
+                editModal.style.display = 'none';
+            });
+
+            document.getElementById('cancel-item-btn').addEventListener('click', () => {
+                editModal.style.display = 'none';
+            });
+
+            const saveData = () => {
+                localStorage.setItem('alb_menu', JSON.stringify(menuData));
+            };
+        });
+    </script>
+</body>
+</html>
